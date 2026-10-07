@@ -1,6 +1,12 @@
 # TaskHub
 
-Application de gestion de projets et de tâches en équipe. **Next.js / TypeScript** pour l’interface, **FastAPI / SQLAlchemy** pour l’API, **PostgreSQL** en Docker et **SQLite** pour démarrer sans Docker.
+[![TaskHub checks](https://github.com/syrine291100/TaskHub/actions/workflows/ci.yml/badge.svg)](https://github.com/syrine291100/TaskHub/actions/workflows/ci.yml)
+
+Application web de gestion de projets et de tâches en équipe, avec espaces de travail et tableau Kanban. **Next.js / TypeScript** pour l’interface, **FastAPI / SQLAlchemy** pour l’API et **PostgreSQL** pour les données en ligne. SQLite permet de démarrer en local sans Docker.
+
+**[Essayer TaskHub](https://task-hub-ochre.vercel.app/)** · **[Documentation de l’API](https://taskhub-api-29tq.onrender.com/docs)**
+
+La V1 est déployée sur **Vercel** (frontend), **Render** (API) et **Neon** (PostgreSQL). Pour essayer l’application, créer un compte, un espace de travail, un projet et quelques tâches. Les comptes et données de l’environnement local sont séparés de ceux de la démo.
 
 ## Fonctionnalités de la V1
 
@@ -28,7 +34,7 @@ Prérequis : Python 3.12+ et Node.js 22+. Ouvrir deux terminaux PowerShell.
 
 ```powershell
 cd backend
-python -m venv .venv
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
 Copy-Item .env.example .env
@@ -108,22 +114,26 @@ frontend/
 
 ## Déploiement
 
-1. Créer une base PostgreSQL et déployer `backend` sur un hébergeur Python, avec `pip install -r requirements.txt` comme commande de build.
-2. Définir `DATABASE_URL`, un `JWT_SECRET` aléatoire et `CORS_ORIGINS` avec l’URL exacte de l’interface.
-3. Appliquer `alembic upgrade head`, puis lancer `uvicorn main:app --host 0.0.0.0 --port $PORT` (port fourni par l’hébergeur).
-4. Déployer `frontend` avec la racine de projet `frontend`, commande de build `npm run build`. Définir `NEXT_PUBLIC_API_URL` avec l’URL HTTPS de l’API **avant le build**.
-5. Créer un compte de démonstration sans données privées et tester le parcours complet après déploiement.
+### API — Render
 
-Le projet n’est pas automatiquement publié : aucune URL de production n’est configurée dans ce ZIP.
+- Racine du service : `backend`.
+- Build : `pip install -r requirements.txt`.
+- Démarrage : `alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port $PORT`.
+- `DATABASE_URL` : chaîne de connexion PostgreSQL fournie par Neon, avec SSL.
+- `JWT_SECRET` : secret aléatoire d’au moins 32 caractères.
+- `CORS_ORIGINS` : `https://task-hub-ochre.vercel.app`, sans barre oblique finale.
+
+### Interface — Vercel
+
+- Framework : Next.js.
+- Racine du projet : `frontend`.
+- Build : `npm run build`.
+- `NEXT_PUBLIC_API_URL` : `https://taskhub-api-29tq.onrender.com`, à définir **avant le build**.
+
+Les secrets se configurent dans l’hébergeur et ne doivent pas être ajoutés au dépôt. Pour un autre déploiement, remplacer les URLs ci-dessus par celles du frontend et de l’API correspondants.
 
 ## Choix et limites
 
-La V1 utilise le schéma fourni au départ. Les colonnes sont fixes. La recherche et les compteurs se font côté API ; le tableau charge toutes les tâches d’un projet, adapté à une démonstration ou une petite équipe. Les membres peuvent modifier les projets et tâches de leur espace. L’ajout de membre est direct et nécessite un compte existant : aucun e-mail d’invitation n’est envoyé.
+Les colonnes du tableau sont fixes. La recherche et les compteurs se font côté API ; le tableau charge toutes les tâches d’un projet, adapté à une démonstration ou une petite équipe. Les membres peuvent modifier les projets et tâches de leur espace. L’ajout de membre est direct et nécessite un compte existant : aucun e-mail d’invitation n’est envoyé.
 
 Le jeton est conservé dans `sessionStorage` (session de l’onglet) et expire après 8 heures. La déconnexion le retire du navigateur sans révocation côté serveur. Avant une ouverture large au public, ajouter une limitation des tentatives de connexion, récupération de mot de passe, vérification d’e-mail et gestion complète des membres. Les notifications, pièces jointes, colonnes personnalisées, réordonnancement des cartes et mises à jour temps réel sont hors de cette V1.
-
-## Présentation en entretien
-
-« J’ai construit une application de gestion de projets avec un tableau Kanban. L’API vérifie l’appartenance à un espace avant chaque accès à un projet ou une tâche, et empêche les assignations ou déplacements vers un autre espace. Le frontend TypeScript gère les formulaires, les états d’erreur et le déplacement des tâches. Des tests d’intégration vérifient notamment qu’un deuxième compte ne peut pas consulter ou modifier les données du premier. »
-
-Relire et expliquer le code, puis personnaliser cette description selon les parties réalisées et comprises.
